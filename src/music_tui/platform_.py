@@ -24,5 +24,5 @@ try:
     import sounddevice  # noqa: F401
 
     HAS_AUDIO: bool = True
-except ImportError:
+except (ImportError, OSError):
     HAS_AUDIO: bool = False

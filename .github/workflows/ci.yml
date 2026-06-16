@@ -22,6 +22,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install PortAudio (Ubuntu)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y libportaudio2
+
+      - name: Install PortAudio (macOS)
+        if: runner.os == 'macOS'
+        run: brew install portaudio
+
       - name: Install package + dev deps
         run: pip install -e ".[dev]"
 
