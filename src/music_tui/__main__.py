@@ -3,9 +3,16 @@
 from __future__ import annotations
 
 import argparse
-import curses
 import sys
 from pathlib import Path
+
+try:
+    import curses
+except ImportError:
+    print("Error: curses is not available.")
+    if sys.platform == "win32":
+        print("Run:  pip install windows-curses")
+    sys.exit(1)
 
 from . import __version__
 from .config import load as load_cfg
