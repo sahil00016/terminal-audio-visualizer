@@ -1,0 +1,4 @@
+include README.md
+include LICENSE
+exclude *.mp3 *.flac *.wav *.ogg *.m4a *.aac *.opus *.wma *.alac *.aiff *.ape *.mka
+recursive-exclude * *.mp3 *.flac *.wav *.ogg *.m4a *.aac *.opus *.wma

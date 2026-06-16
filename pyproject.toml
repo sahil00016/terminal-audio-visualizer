@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sahil-music-tui"
+version = "0.1.6"
+description = "Terminal music player with real-time audio visualizer themes"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    { name = "Sahil Sonker", email = "sahil.s@optimoloan.com" }
+]
+keywords = ["music", "tui", "terminal", "player", "visualizer", "mpv", "curses"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Environment :: Console :: Curses",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Players",
+]
+dependencies = [
+    "windows-curses>=2.3; sys_platform == 'win32'",
+]
+
+[project.optional-dependencies]
+visualizer = [
+    "numpy>=1.21",
+    "sounddevice>=0.4",
+]
+dev = [
+    "pytest>=7",
+    "numpy>=1.21",
+    "sounddevice>=0.4",
+]
+
+[project.scripts]
+music-tui = "music_tui.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/sahilsonker/music-tui"
+Issues   = "https://github.com/sahilsonker/music-tui/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/music_tui"]
