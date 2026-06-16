@@ -21,5 +21,5 @@ def test_fake_bands_not_all_zero():
 
 def test_start_stop_no_crash():
     viz = AudioVisualizer(n_bands=8)
-    viz.start()   # HAS_AUDIO=False means thread never starts; still safe
+    viz.start()  # HAS_AUDIO=False means thread never starts; still safe
     viz.stop()

@@ -5,27 +5,25 @@ from __future__ import annotations
 import math
 import threading
 import time
-from typing import Callable
 
-from .constants import VIZ_H
 from .platform_ import HAS_AUDIO
 
 _N_BANDS = 32
-_FALLBACK_SPEED = 0.15      # seconds per fake animation step
-_SILENCE_THRESHOLD = 0.01   # bands below this → switch to fake
+_FALLBACK_SPEED = 0.15  # seconds per fake animation step
+_SILENCE_THRESHOLD = 0.01  # bands below this → switch to fake
 
 
 class AudioVisualizer:
     def __init__(self, n_bands: int = _N_BANDS) -> None:
-        self.n_bands   = n_bands
-        self._bands    = [0.0] * n_bands
-        self._lock     = threading.Lock()
-        self._running  = False
+        self.n_bands = n_bands
+        self._bands = [0.0] * n_bands
+        self._lock = threading.Lock()
+        self._running = False
         self._thread: threading.Thread | None = None
 
         # Fake-animation state
         self._fake_frame = 0.0
-        self._fake_last  = 0.0
+        self._fake_last = 0.0
 
     # ── Public ────────────────────────────────────────────────────────────────
 
@@ -33,7 +31,7 @@ class AudioVisualizer:
         if not HAS_AUDIO:
             return
         self._running = True
-        self._thread  = threading.Thread(target=self._capture_loop, daemon=True)
+        self._thread = threading.Thread(target=self._capture_loop, daemon=True)
         self._thread.start()
 
     def stop(self) -> None:
@@ -61,18 +59,18 @@ class AudioVisualizer:
             return
 
         device = self._get_monitor_device(sd)
-        rate   = 44100
-        chunk  = 1024
+        rate = 44100
+        chunk = 1024
 
         def callback(indata, _frames, _time, _status):
-            audio  = indata[:, 0]
+            audio = indata[:, 0]
             window = np.hanning(len(audio))
-            fft    = np.abs(np.fft.rfft(audio * window))
+            fft = np.abs(np.fft.rfft(audio * window))
             # Map FFT bins to logarithmically-spaced bands
             freq_bins = len(fft)
             bands_out = []
             for i in range(self.n_bands):
-                lo = int(freq_bins * i       / self.n_bands)
+                lo = int(freq_bins * i / self.n_bands)
                 hi = int(freq_bins * (i + 1) / self.n_bands)
                 val = float(np.mean(fft[lo:hi])) if hi > lo else 0.0
                 bands_out.append(val)
@@ -110,15 +108,15 @@ class AudioVisualizer:
         now = time.monotonic()
         if now - self._fake_last >= _FALLBACK_SPEED:
             self._fake_frame += 1
-            self._fake_last   = now
+            self._fake_last = now
 
         frame = self._fake_frame
         bands = []
         for i in range(self.n_bands):
-            phase  = (i / self.n_bands) * math.pi * 2
-            wave1  = 0.5 + 0.5 * math.sin(phase + frame * 0.25)
-            wave2  = 0.3 + 0.3 * math.sin(phase * 2.1 + frame * 0.18)
-            wave3  = 0.2 + 0.2 * math.sin(phase * 0.7 + frame * 0.31)
+            phase = (i / self.n_bands) * math.pi * 2
+            wave1 = 0.5 + 0.5 * math.sin(phase + frame * 0.25)
+            wave2 = 0.3 + 0.3 * math.sin(phase * 2.1 + frame * 0.18)
+            wave3 = 0.2 + 0.2 * math.sin(phase * 0.7 + frame * 0.31)
             envelope = math.sin(i / self.n_bands * math.pi)  # peak in middle
             val = (wave1 * 0.5 + wave2 * 0.3 + wave3 * 0.2) * envelope
             bands.append(min(val, 1.0))

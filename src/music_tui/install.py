@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
-import sys
 
 
 def check_mpv() -> bool:
@@ -13,6 +11,7 @@ def check_mpv() -> bool:
 
 def mpv_install_hint() -> str:
     import platform
+
     system = platform.system()
     if system == "Linux":
         return "Install mpv:  sudo apt install mpv   (or: sudo dnf install mpv)"
@@ -41,6 +40,7 @@ def audio_install_hint() -> str:
 
 def portaudio_hint() -> str:
     import platform
+
     system = platform.system()
     if system == "Linux":
         return "Missing PortAudio:  sudo apt install libportaudio2"
@@ -63,6 +63,7 @@ def ensure_runtime_deps() -> list[str]:
         # sounddevice is present but PortAudio might still be missing
         try:
             import sounddevice as sd
+
             sd.query_devices()
         except OSError:
             warnings.append(portaudio_hint())

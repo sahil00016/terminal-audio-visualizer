@@ -10,17 +10,16 @@ from __future__ import annotations
 
 import curses
 import random
-import time
 from pathlib import Path
 
-from .colors import CP_CYAN, CP_GREEN, CP_RED, CP_WHITE, CP_YELLOW, CP_HEADER, init_colors
+from .colors import CP_CYAN, CP_GREEN, CP_HEADER, CP_RED, CP_WHITE, CP_YELLOW, init_colors
 from .constants import CTRL_H, HELP, THEME_LABEL, THEMES, VIZ_H
 from .helpers import fmt_time, progress_bar
+from .mpv import MPV
 from .platform_ import HAS_AUDIO, IS_MAC, IS_WINDOWS
 from .scanner import _display_name
 from .themes import draw_theme
 from .visualizer import AudioVisualizer
-from .mpv import MPV
 
 
 def _safe(win, y: int, x: int, s: str, attr: int = 0) -> None:
@@ -44,19 +43,19 @@ def run(
     stdscr.timeout(80)
     init_colors()
 
-    selected    = start_idx
-    offset      = 0
+    selected = start_idx
+    offset = 0
     playing_idx = -1
-    shuffle     = cfg.get("shuffle", False)
-    repeat      = cfg.get("repeat",  False)
-    theme_idx   = THEMES.index(cfg.get("theme", "bars")) if cfg.get("theme") in THEMES else 0
-    autoplay    = start_idx > 0
+    shuffle = cfg.get("shuffle", False)
+    repeat = cfg.get("repeat", False)
+    theme_idx = THEMES.index(cfg.get("theme", "bars")) if cfg.get("theme") in THEMES else 0
+    autoplay = start_idx > 0
 
     def play(idx: int) -> None:
         nonlocal playing_idx, autoplay
         if 0 <= idx < len(files):
             playing_idx = idx
-            autoplay    = False
+            autoplay = False
             mpv.load(str(files[idx]))
 
     def next_track() -> None:
@@ -74,21 +73,19 @@ def run(
         h, w = stdscr.getmaxyx()
 
         ctrl_start = max(h - CTRL_H, 0)
-        div2_row   = ctrl_start - 1
-        viz_start  = div2_row - VIZ_H
-        div1_row   = viz_start - 1
-        list_h     = max(div1_row - 1, 0)
-        list_w     = w - 32 if w > 52 else w
-        help_x     = list_w if w > 52 else 0
+        div2_row = ctrl_start - 1
+        viz_start = div2_row - VIZ_H
+        div1_row = viz_start - 1
+        list_h = max(div1_row - 1, 0)
+        list_w = w - 32 if w > 52 else w
+        help_x = list_w if w > 52 else 0
 
         stdscr.erase()
 
         # ── Header ────────────────────────────────────────────────────────────
         theme_name = THEME_LABEL[THEMES[theme_idx]]
-        header     = f"  Music TUI   {theme_name} "
-        _safe(stdscr, 0, 0,
-              header.ljust(w)[:w],
-              curses.color_pair(CP_HEADER) | curses.A_BOLD)
+        header = f"  Music TUI   {theme_name} "
+        _safe(stdscr, 0, 0, header.ljust(w)[:w], curses.color_pair(CP_HEADER) | curses.A_BOLD)
 
         # ── Playlist ──────────────────────────────────────────────────────────
         if selected < offset:
@@ -101,46 +98,59 @@ def run(
             row = 1 + i
             if row >= div1_row or idx >= len(files):
                 break
-            name   = _display_name(files[idx])[: list_w - 5]
+            name = _display_name(files[idx])[: list_w - 5]
             prefix = "▶ " if idx == playing_idx else "  "
-            attr   = (curses.color_pair(CP_GREEN) | curses.A_BOLD
-                      if idx == playing_idx
-                      else curses.color_pair(CP_WHITE))
+            attr = (
+                curses.color_pair(CP_GREEN) | curses.A_BOLD
+                if idx == playing_idx
+                else curses.color_pair(CP_WHITE)
+            )
             if idx == selected:
                 attr |= curses.A_REVERSE
-            _safe(stdscr, row, 0,
-                  f"{prefix}{name}".ljust(list_w - 1)[: list_w - 1], attr)
+            _safe(stdscr, row, 0, f"{prefix}{name}".ljust(list_w - 1)[: list_w - 1], attr)
 
         if not files:
             _draw_empty(stdscr, w)
 
         # ── Help panel / narrow hint ──────────────────────────────────────────
         if w > 52:
-            _safe(stdscr, 1, help_x,
-                  "  Keys".ljust(w - help_x)[: w - help_x],
-                  curses.color_pair(CP_CYAN) | curses.A_UNDERLINE)
+            _safe(
+                stdscr,
+                1,
+                help_x,
+                "  Keys".ljust(w - help_x)[: w - help_x],
+                curses.color_pair(CP_CYAN) | curses.A_UNDERLINE,
+            )
             for i, (key, desc) in enumerate(HELP):
                 r = 2 + i
                 if r >= div1_row:
                     break
-                _safe(stdscr, r, help_x,
-                      f"  {key:<8} {desc}"[: w - help_x],
-                      curses.color_pair(CP_WHITE))
+                _safe(
+                    stdscr,
+                    r,
+                    help_x,
+                    f"  {key:<8} {desc}"[: w - help_x],
+                    curses.color_pair(CP_WHITE),
+                )
         else:
-            _safe(stdscr, 1, 0,
-                  " ↑↓ nav  Enter play  Space pause  t theme  q quit"[:w - 1],
-                  curses.color_pair(CP_CYAN))
+            _safe(
+                stdscr,
+                1,
+                0,
+                " ↑↓ nav  Enter play  Space pause  t theme  q quit"[: w - 1],
+                curses.color_pair(CP_CYAN),
+            )
 
         # ── Divider 1 ─────────────────────────────────────────────────────────
         if 0 <= div1_row < h:
             _safe(stdscr, div1_row, 0, "─" * w, curses.color_pair(CP_CYAN))
 
         # ── Cache ALL mpv state once per frame ───────────────────────────────
-        idle     = mpv.get_idle()
-        paused   = mpv.get_paused()
-        pos      = mpv.get_pos()       # may be None OR 0.0 — do NOT coerce with `or 0`
-        dur      = mpv.get_duration()
-        playing  = playing_idx >= 0 and not idle
+        idle = mpv.get_idle()
+        paused = mpv.get_paused()
+        pos = mpv.get_pos()  # may be None OR 0.0 — do NOT coerce with `or 0`
+        dur = mpv.get_duration()
+        playing = playing_idx >= 0 and not idle
 
         # ── Visualizer ────────────────────────────────────────────────────────
         if viz_start >= 1 and w > 1:
@@ -149,9 +159,8 @@ def run(
 
             if not HAS_AUDIO:
                 hint = '  pip install "sahil-music-tui[visualizer]"  for live FFT  '
-                hx   = max((w - len(hint)) // 2, 0)
-                _safe(stdscr, viz_start + VIZ_H // 2, hx,
-                      hint[:w - 1], curses.color_pair(CP_CYAN))
+                hx = max((w - len(hint)) // 2, 0)
+                _safe(stdscr, viz_start + VIZ_H // 2, hx, hint[: w - 1], curses.color_pair(CP_CYAN))
 
         # ── Divider 2 ─────────────────────────────────────────────────────────
         if 0 <= div2_row < h:
@@ -160,28 +169,27 @@ def run(
         # ── Controls ──────────────────────────────────────────────────────────
         if playing and playing_idx >= 0:
             track = files[playing_idx].stem
-            icon  = "⏸" if paused else "▶"
+            icon = "⏸" if paused else "▶"
         else:
             track, icon = "—", "■"
 
         # Auto-advance: guard with `pos is not None` to avoid 0.0 → None confusion
-        if (playing and dur and pos is not None and dur > 0
-                and pos >= dur - 0.5 and not idle):
+        if playing and dur and pos is not None and dur > 0 and pos >= dur - 0.5 and not idle:
             if repeat:
                 play(playing_idx)
             else:
                 next_track()
 
-        bar_w    = max(w - 20, 10)
+        bar_w = max(w - 20, 10)
         pos_draw = pos if pos is not None else 0.0
         bar, pct = progress_bar(pos_draw, dur, bar_w)
-        flags    = (("⇀ shuffle  " if shuffle else "") + ("↺ repeat" if repeat else "")).strip()
+        flags = (("⇀ shuffle  " if shuffle else "") + ("↺ repeat" if repeat else "")).strip()
 
         ctrl_lines = [
             f" {icon}  {track}",
             f"    {fmt_time(pos)} / {fmt_time(dur)}  {pct:3d}%{'  ' + flags if flags else ''}",
             f"    {bar}",
-            f"    vol: +/-   mute: m   seek: ←→   theme: t",
+            "    vol: +/-   mute: m   seek: ←→   theme: t",
         ]
         for i, line in enumerate(ctrl_lines):
             r = ctrl_start + i
@@ -241,14 +249,15 @@ def run(
             theme_idx = (theme_idx + 1) % len(THEMES)
 
     return {
-        "theme":   THEMES[theme_idx],
+        "theme": THEMES[theme_idx],
         "shuffle": shuffle,
-        "repeat":  repeat,
+        "repeat": repeat,
     }
 
 
 def _draw_empty(stdscr, w: int) -> None:
     from .constants import AUDIO_EXTS
+
     if IS_WINDOWS:
         scan_paths = "  ~/Music  ~/Downloads  ~/Desktop  C:\\  D:\\ …"
     elif IS_MAC:
@@ -268,6 +277,6 @@ def _draw_empty(stdscr, w: int) -> None:
         ]
     for i, (line, cp) in enumerate(lines):
         try:
-            stdscr.addstr(3 + i, 0, line[:w - 1], curses.color_pair(cp))
+            stdscr.addstr(3 + i, 0, line[: w - 1], curses.color_pair(cp))
         except curses.error:
             pass

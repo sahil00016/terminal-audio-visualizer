@@ -12,7 +12,7 @@ def fmt_time(secs: float | None) -> str:
 
 def progress_bar(pos: float, dur: float | None, width: int) -> tuple[str, int]:
     if dur and dur > 0:
-        frac   = min(pos / dur, 1.0)
+        frac = min(pos / dur, 1.0)
         filled = int(frac * width)
         return "█" * filled + "░" * (width - filled), int(frac * 100)
     return "░" * width, 0

@@ -30,13 +30,13 @@ def _free_port() -> int:
 
 class MPV:
     def __init__(self) -> None:
-        self._proc:        subprocess.Popen | None = None
-        self._sock:        socket.socket    | None = None
-        self._lock:        threading.Lock          = threading.Lock()
-        self._req_id:      int                     = 0
-        self._socket_path: str | None              = None
-        self._tmp_dir:     str | None              = None
-        self._tcp_port:    int | None              = None
+        self._proc: subprocess.Popen | None = None
+        self._sock: socket.socket | None = None
+        self._lock: threading.Lock = threading.Lock()
+        self._req_id: int = 0
+        self._socket_path: str | None = None
+        self._tmp_dir: str | None = None
+        self._tcp_port: int | None = None
 
     # ── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -46,20 +46,19 @@ class MPV:
             ipc_arg = f"tcp://127.0.0.1:{self._tcp_port}"
         else:
             # Use a private temp directory to avoid TOCTOU race on the socket path
-            self._tmp_dir     = tempfile.mkdtemp(prefix="music_tui_")
+            self._tmp_dir = tempfile.mkdtemp(prefix="music_tui_")
             self._socket_path = os.path.join(self._tmp_dir, "mpv.sock")
-            ipc_arg           = self._socket_path
+            ipc_arg = self._socket_path
 
         self._proc = subprocess.Popen(
-            ["mpv", "--no-video", "--idle=yes", "--really-quiet",
-             f"--input-ipc-server={ipc_arg}"],
+            ["mpv", "--no-video", "--idle=yes", "--really-quiet", f"--input-ipc-server={ipc_arg}"],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
 
         if IS_WINDOWS:
-            time.sleep(0.4)   # give mpv time to open TCP listener
+            time.sleep(0.4)  # give mpv time to open TCP listener
         else:
             for _ in range(40):
                 if os.path.exists(self._socket_path):
@@ -148,14 +147,32 @@ class MPV:
 
     # ── Commands ─────────────────────────────────────────────────────────────
 
-    def load(self, path: str) -> None:  self._send(["loadfile", str(path), "replace"])
-    def play_pause(self)     -> None:   self._send(["cycle", "pause"])
-    def stop(self)           -> None:   self._send(["stop"])
-    def seek(self, s: float) -> None:   self._send(["seek", s, "relative"])
-    def volume(self, d: int) -> None:   self._send(["add", "volume", d])
-    def mute(self)           -> None:   self._send(["cycle", "mute"])
+    def load(self, path: str) -> None:
+        self._send(["loadfile", str(path), "replace"])
 
-    def get_paused(self)   -> bool  | None: return self._send(["get_property", "pause"])
-    def get_pos(self)      -> float | None: return self._send(["get_property", "time-pos"])
-    def get_duration(self) -> float | None: return self._send(["get_property", "duration"])
-    def get_idle(self)     -> bool  | None: return self._send(["get_property", "idle-active"])
+    def play_pause(self) -> None:
+        self._send(["cycle", "pause"])
+
+    def stop(self) -> None:
+        self._send(["stop"])
+
+    def seek(self, s: float) -> None:
+        self._send(["seek", s, "relative"])
+
+    def volume(self, d: int) -> None:
+        self._send(["add", "volume", d])
+
+    def mute(self) -> None:
+        self._send(["cycle", "mute"])
+
+    def get_paused(self) -> bool | None:
+        return self._send(["get_property", "pause"])
+
+    def get_pos(self) -> float | None:
+        return self._send(["get_property", "time-pos"])
+
+    def get_duration(self) -> float | None:
+        return self._send(["get_property", "duration"])
+
+    def get_idle(self) -> bool | None:
+        return self._send(["get_property", "idle-active"])

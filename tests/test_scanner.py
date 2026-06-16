@@ -1,11 +1,9 @@
 import os
 import sys
-import tempfile
 from pathlib import Path
 
 import pytest
-
-from music_tui.scanner import _iter_audio, scan_all, _display_name
+from music_tui.scanner import _display_name, _iter_audio
 
 
 def _make_tree(tmp_path: Path) -> tuple[Path, Path, Path]:
@@ -57,8 +55,8 @@ def test_iter_audio_permission_error(tmp_path):
     (locked / "song.mp3").write_bytes(b"")
     locked.chmod(0o000)
     try:
-        result = list(_iter_audio(locked))
-        # May be empty or contain nothing — must not raise
+        list(_iter_audio(locked))
+        # Must not raise
     finally:
         locked.chmod(0o755)
 

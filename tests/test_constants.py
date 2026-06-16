@@ -1,4 +1,4 @@
-from music_tui.constants import AUDIO_EXTS, BLOCKS, THEMES, THEME_LABEL, HELP, VIZ_H, CTRL_H
+from music_tui.constants import AUDIO_EXTS, BLOCKS, CTRL_H, HELP, THEME_LABEL, THEMES, VIZ_H
 
 
 def test_audio_exts_is_frozenset():

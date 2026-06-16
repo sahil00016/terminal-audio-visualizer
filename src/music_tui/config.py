@@ -9,10 +9,10 @@ from pathlib import Path
 from .platform_ import IS_WINDOWS
 
 DEFAULTS: dict = {
-    "theme":   "bars",
-    "volume":  80,
+    "theme": "bars",
+    "volume": 80,
     "shuffle": False,
-    "repeat":  False,
+    "repeat": False,
 }
 
 

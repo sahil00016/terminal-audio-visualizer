@@ -93,7 +93,3 @@ Drop audio files into `~/Music` (any subfolder works) and launch.
 ## License
 
 MIT
-
-
-
-

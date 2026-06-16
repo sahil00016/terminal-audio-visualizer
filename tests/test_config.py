@@ -1,8 +1,7 @@
 import json
-from pathlib import Path
 from unittest.mock import patch
 
-from music_tui.config import load, save, DEFAULTS
+from music_tui.config import DEFAULTS, load, save
 
 
 def test_load_returns_defaults_when_missing(tmp_path):
