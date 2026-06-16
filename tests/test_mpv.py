@@ -2,10 +2,7 @@
 
 import json
 import socket
-import threading
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from music_tui.mpv import MPV
 
@@ -13,10 +10,7 @@ from music_tui.mpv import MPV
 def _make_mock_sock(responses: list[dict]):
     """Return a mock socket that emits JSON responses in order."""
     sock = MagicMock()
-    recv_data = [
-        (json.dumps({**r, "error": "success"}) + "\n").encode()
-        for r in responses
-    ]
+    recv_data = [(json.dumps({**r, "error": "success"}) + "\n").encode() for r in responses]
     # Each recv() call returns one response, then raises timeout
     recv_side_effects = recv_data + [socket.timeout()]
     sock.recv.side_effect = recv_side_effects

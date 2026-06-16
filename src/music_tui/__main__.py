@@ -8,11 +8,12 @@ import sys
 from pathlib import Path
 
 from . import __version__
+from .config import load as load_cfg
+from .config import save as save_cfg
 from .constants import AUDIO_EXTS
 from .install import ensure_runtime_deps
 from .mpv import MPV
 from .scanner import install_file_association, scan_all
-from .config import load as load_cfg, save as save_cfg
 from .ui import run
 from .visualizer import AudioVisualizer
 
@@ -24,7 +25,9 @@ def main() -> None:
     )
     parser.add_argument("--version", action="version", version=f"music-tui {__version__}")
     parser.add_argument(
-        "file", nargs="?", type=Path,
+        "file",
+        nargs="?",
+        type=Path,
         help="Audio file to open directly (e.g. from 'Open with…')",
     )
     args = parser.parse_args()

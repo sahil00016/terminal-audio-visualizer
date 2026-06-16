@@ -11,14 +11,14 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 from .constants import AUDIO_EXTS
 from .platform_ import IS_LINUX, IS_MAC, IS_WINDOWS
 
-
 # ── Scanning ─────────────────────────────────────────────────────────────────
+
 
 def _scan_dirs() -> list[Path]:
     home = Path.home()
@@ -44,9 +44,11 @@ def _scan_dirs() -> list[Path]:
 def _windows_drives() -> list[Path]:
     """Return present drive roots using a bitmask (no blocking Path.exists() probes)."""
     import string
+
     drives: list[Path] = []
     try:
         import ctypes
+
         bitmask: int = ctypes.windll.kernel32.GetLogicalDrives()
         for i, letter in enumerate(string.ascii_uppercase):
             if bitmask & (1 << i):
@@ -76,7 +78,7 @@ def _iter_audio(directory: Path) -> Iterator[Path]:
 
 
 def scan_all() -> list[Path]:
-    seen:  set[Path] = set()
+    seen: set[Path] = set()
     files: list[Path] = []
 
     dirs = _scan_dirs()
@@ -113,6 +115,7 @@ def _display_name(p: Path) -> str:
 
 # ── File-manager integration ──────────────────────────────────────────────────
 
+
 def install_file_association() -> None:
     """Register music-tui as an 'Open with' handler.  Runs once, silently."""
     bin_path = shutil.which("music-tui") or "music-tui"
@@ -126,7 +129,7 @@ def install_file_association() -> None:
 
 
 def _install_linux(bin_path: str) -> None:
-    desktop_dir  = Path.home() / ".local" / "share" / "applications"
+    desktop_dir = Path.home() / ".local" / "share" / "applications"
     desktop_file = desktop_dir / "music-tui.desktop"
     if desktop_file.exists():
         return
@@ -159,6 +162,7 @@ def _install_linux(bin_path: str) -> None:
 def _install_windows(bin_path: str) -> None:
     try:
         import winreg
+
         with winreg.CreateKey(
             winreg.HKEY_CURRENT_USER,
             r"Software\Classes\MusicTUI\shell\open\command",
